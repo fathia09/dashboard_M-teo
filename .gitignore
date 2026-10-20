@@ -1,0 +1,14 @@
+# Fichiers temporaires Python
+__pycache__/
+*.pyc
+
+# Environnements virtuels
+.venv/
+venv/
+
+# Cache et fichiers locaux
+.pytest_cache/
+data_cache.db
+
+# Variables d'environnement
+.env
