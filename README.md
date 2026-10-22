@@ -6,7 +6,7 @@ Application Streamlit qui récupère la météo et la qualité de l'air et les a
 
 | Domaine | Détail |
 |---|---|
-| **Ingestion** | Données horaires sur 7 jours via **Open-Meteo** (aucune clé API requise) : géocodage, météo, qualité de l'air. |
+| **Ingestion** | Données horaires sur 7 jours via **Open-Meteo** : géocodage, météo, qualité de l'air. |
 | **Villes** | Paris, Lyon, Marseille, Londres, Madrid, plus une saisie libre (« Autre… ») géocodée à la volée. |
 | **Météo** | Température, humidité, pression atmosphérique, vitesse du vent. |
 | **Qualité de l'air** | Indice AQI (US), PM2.5, PM10, NO₂, O₃, CO, SO₂. |
