@@ -1,0 +1,11 @@
+services:
+  dashboard:
+    build: 
+    container_name: dashboard-meteo
+    ports:
+      - "8501:8501"
+    environment:
+      - CACHE_TTL_SECONDS=1800
+      - OFFLINE_MODE=${OFFLINE_MODE:-false}
+    volumes:
+      - ./data:/app/data
