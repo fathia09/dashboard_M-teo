@@ -12,3 +12,6 @@ data_cache.db
 
 # Variables d'environnement
 .env
+.env.*
+!.env.example
+!.env.exemple
