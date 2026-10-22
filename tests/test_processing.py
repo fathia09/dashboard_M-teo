@@ -266,3 +266,124 @@ def test_who_alerts_missing_hour():
 
     # Il manque une heure dans les dernières 24 heures
     assert alertes == []
+
+def test_statistics_missing_pollution_data():
+    df = pd.DataFrame({
+        "datetime": pd.date_range(
+            "2026-10-20",
+            periods=24,
+            freq="h"
+        ),
+        "temperature_2m": [20.0] * 24,
+        "relative_humidity_2m": [50.0] * 24,
+        "pm2_5": [float("nan")] * 24,
+        "pm10": [10.0] * 24,
+        "nitrogen_dioxide": [5.0] * 24,
+        "ozone": [30.0] * 24
+    })
+
+    resultat = DataProcessor.calculate_statistics(
+        df,
+        n_hours=24
+    )
+
+    assert resultat["temperature_moyenne"] == 20.0
+    assert pd.isna(resultat["pm25_moyenne"])
+
+def test_statistics_24h_vs_7days():
+    # Création de 7 jours de données horaires
+    dates = pd.date_range(
+        "2026-10-01",
+        periods=168,
+        freq="h"
+    )
+
+    # Les 6 premiers jours : 10 °C
+    # Le dernier jour : 30 °C
+    temperatures = [10.0] * 144 + [30.0] * 24
+
+    df = pd.DataFrame({
+        "datetime": dates,
+        "temperature_2m": temperatures,
+        "relative_humidity_2m": [50.0] * 168,
+        "pm2_5": [10.0] * 168,
+        "pm10": [20.0] * 168,
+        "nitrogen_dioxide": [5.0] * 168,
+        "ozone": [30.0] * 168
+    })
+
+    stats_24h = DataProcessor.calculate_statistics(
+        df, n_hours=24
+    )
+
+    stats_7j = DataProcessor.calculate_statistics(
+        df, n_hours=168
+    )
+
+    assert stats_24h["temperature_moyenne"] == 30.0
+
+    assert round(
+        stats_7j["temperature_moyenne"], 2
+    ) == 12.86
+
+def test_health_index_missing_pm25():
+    df = pd.DataFrame({
+        "temperature_2m": [22.0, 25.0],
+        "apparent_temperature": [24.0, 28.0],
+        "relative_humidity_2m": [50.0, 60.0],
+        "pm2_5": [10.0, float("nan")]
+    })
+
+    scores = DataProcessor.calculate_custom_health_index(df)
+
+    # Première mesure : toutes les données sont présentes
+    assert scores.iloc[0] == 83.5
+
+    # Deuxième mesure : PM2.5 manquant
+    assert pd.isna(scores.iloc[1])
+
+def test_cleaning_invalid_data():
+    raw_data = {
+        "weather": {
+            "hourly": {
+                "time": [
+                    "2026-10-20T10:00",
+                    "2026-10-20T11:00",
+                    "2026-10-20T12:00"
+                ],
+                "temperature_2m": [20, 21, 22],
+                "relative_humidity_2m": [50, 150, 60]
+            }
+        },
+        "air_quality": {
+            "hourly": {
+                "time": [
+                    "2026-10-20T10:00",
+                    "2026-10-20T11:00",
+                    "2026-10-20T12:00"
+                ],
+                "pm2_5": [10, -5, 15],
+                "pm10": [20, 25, -10],
+                "nitrogen_dioxide": [5, 10, 15],
+                "ozone": [30, 40, 50]
+            }
+        }
+    }
+
+    df = DataProcessor.process_raw_api_data(raw_data)
+
+    # Les trois lignes doivent être conservées
+    assert len(df) == 3
+
+    # L'humidité à 150 % est invalide
+    assert pd.isna(df.loc[1, "relative_humidity_2m"])
+
+    # Une concentration de PM2.5 négative est invalide
+    assert pd.isna(df.loc[1, "pm2_5"])
+
+    # Une concentration de PM10 négative est invalide
+    assert pd.isna(df.loc[2, "pm10"])
+
+    # Les valeurs valides restent inchangées
+    assert df.loc[0, "temperature_2m"] == 20
+    assert df.loc[0, "pm2_5"] == 10

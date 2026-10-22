@@ -117,7 +117,11 @@ class DataProcessor:
             "temperature_mediane": recent_data["temperature_2m"].median(),
             "humidite_moyenne": recent_data["relative_humidity_2m"].mean(),
             "pm25_moyenne": recent_data["pm2_5"].mean(),
-            "pm25_mediane": recent_data["pm2_5"].median(),
+            "pm25_mediane": (
+              recent_data["pm2_5"].median()
+              if recent_data["pm2_5"].notna().any()
+              else float("nan")
+            ),
             "pm10_moyenne": recent_data["pm10"].mean(),
             "no2_moyenne": recent_data["nitrogen_dioxide"].mean(),
             "ozone_moyenne": recent_data["ozone"].mean()
